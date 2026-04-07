@@ -1,6 +1,8 @@
 node_modules/
 sheets-sa.json
 *-sa.json
+# Claves JSON descargadas desde Google Cloud (nombre proyecto-id-hex.json)
+dotted-electron-*.json
 .env
 .env.*
 !.env.example
