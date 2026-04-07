@@ -1,0 +1,11 @@
+{
+  "name": "gastos-web-preview",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "crypto-js": "^4.2.0",
+    "googleapis": "^144.0.0"
+  }
+}

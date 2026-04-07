@@ -1,0 +1,18 @@
+Plantilla de deploy (reemplazá valores; no subas IPs ni claves reales al repo).
+
+VPS:
+- PM2: app en 127.0.0.1:PUERTO_APP (health: /health).
+- Nginx: / -> n8n (127.0.0.1:5678); /ruta-app/ -> Node (127.0.0.1:PUERTO_APP).
+
+Google Sheets (dashboard):
+1) Google Cloud: Sheets API + cuenta de servicio + JSON.
+2) Compartir el spreadsheet con el email de la cuenta de servicio (lectura).
+3) JSON en el servidor con permisos restrictivos (chmod 600), nunca en git.
+4) Variables de entorno:
+   GOOGLE_APPLICATION_CREDENTIALS=/ruta/sheets-sa.json
+   GOOGLE_SHEETS_SPREADSHEET_ID=<id del documento>
+5) npm install && pm2 restart <nombre-app>
+
+Sincronizar desde tu máquina (ejemplo):
+  rsync -avz --exclude node_modules -e "ssh -i RUTA_CLAVE" ./Saldu/ ubuntu@HOST:~/app/
+  ssh ... "cd ~/app && npm ci && pm2 restart ..."

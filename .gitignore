@@ -1,0 +1,9 @@
+node_modules/
+sheets-sa.json
+*-sa.json
+.env
+.env.*
+!.env.example
+*.pem
+.DS_Store
+deploy-instructions.txt
