@@ -1,6 +1,5 @@
 import { config as loadEnv } from "dotenv";
 import path from "path";
-import { pathToFileURL } from "url";
 
 export const dynamic = "force-dynamic";
 
@@ -13,12 +12,12 @@ type SheetsModule = {
   default?: { fetchMonthlyTotals: () => Promise<unknown> };
 };
 
+/** Ruta estática (Turbopack no acepta import(file:// dinámico)). */
 async function loadFetchMonthlyTotals(): Promise<() => Promise<unknown>> {
-  const sheetsPath = path.join(process.cwd(), "..", "sheets.js");
-  const href = pathToFileURL(sheetsPath).href;
-  const mod = (await import(href)) as SheetsModule;
-  const fn =
-    mod.fetchMonthlyTotals ?? mod.default?.fetchMonthlyTotals;
+  const mod = (await import(
+    "../../../../sheets.js"
+  )) as SheetsModule;
+  const fn = mod.fetchMonthlyTotals ?? mod.default?.fetchMonthlyTotals;
   if (typeof fn !== "function") {
     throw new Error("sheets.js no exporta fetchMonthlyTotals");
   }
