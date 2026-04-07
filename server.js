@@ -1,6 +1,7 @@
 /**
  * Dashboard de gastos por mes (Google Sheets) + health.
  */
+require("dotenv").config();
 const http = require("http");
 const https = require("https");
 const { fetchMonthlyTotals } = require("./sheets");
