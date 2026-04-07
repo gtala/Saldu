@@ -1,6 +1,6 @@
 # Saldu (Next.js)
 
-Stack **opción B**: Tailwind CSS v4, shadcn/ui (Base UI), Recharts, `next/font`.
+Stack **opción B**: Tailwind CSS v4, shadcn/ui (Base UI), **D3 treemap** (paridad con `server.js`), `next/font`.
 
 ## Desarrollo
 
@@ -20,7 +20,8 @@ npx shadcn@latest add dialog
 
 ## Datos (Google Sheets)
 
-La ruta **`GET /api/data`** usa `../sheets.js` (misma lógica que el `server.js` legacy).
+- **`GET /api/data`** — mismo `fetchMonthlyTotals` que el `server.js` legacy (`../sheets.js`).
+- **`GET /api/cotizacion-cripto`** — dólar cripto (venta) para el toggle USD en la UI.
 
 Variables (en **`../.env`** en la raíz del repo o en **`web/.env.local`**):
 

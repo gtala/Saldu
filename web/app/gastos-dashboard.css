@@ -1,0 +1,288 @@
+/* Paridad visual con server.js (treemap + paneles mensuales) */
+
+.treemap-wrap-dashboard {
+  background: linear-gradient(165deg, #141a24 0%, #0e1218 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  min-height: 280px;
+  padding: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.treemap-host-dashboard svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  border-radius: 10px;
+  vertical-align: top;
+}
+
+.g-cell-rect {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+  cursor: pointer;
+}
+
+.g-cell:focus-visible .g-cell-rect,
+.g-cell-rect.is-selected {
+  stroke: rgba(255, 255, 255, 0.75);
+  stroke-width: 2.2;
+}
+
+.month-balance-panel {
+  margin: 0 0 0.85rem;
+  padding: 1rem 1.05rem 0.95rem;
+  border-radius: var(--radius-md);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(165deg, rgba(22, 28, 38, 0.98) 0%, rgba(12, 16, 23, 0.98) 100%);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.month-balance-panel.is-surplus {
+  border-color: rgba(82, 183, 136, 0.7);
+  box-shadow: 0 0 32px rgba(46, 125, 80, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.month-balance-panel.is-deficit {
+  border-color: rgba(232, 93, 111, 0.6);
+  box-shadow: 0 0 32px rgba(201, 74, 74, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.month-balance-panel.is-even-panel {
+  border-color: rgba(148, 163, 184, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.balance-pill {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  margin-bottom: 0.45rem;
+}
+
+.is-surplus .balance-pill {
+  background: rgba(82, 183, 136, 0.22);
+  color: #b8f0cd;
+}
+
+.is-deficit .balance-pill {
+  background: rgba(232, 93, 111, 0.2);
+  color: #f5c2c9;
+}
+
+.is-even-panel .balance-pill {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+}
+
+.balance-net-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.65rem;
+}
+
+.balance-net-label {
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.balance-net-value {
+  font-size: clamp(1.35rem, 6.5vw, 2.45rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.is-surplus .balance-net-value {
+  color: #7dd89a;
+}
+
+.is-deficit .balance-net-value {
+  color: #f5a0aa;
+}
+
+.balance-net-value.is-even {
+  color: #cbd5e1;
+}
+
+.balance-split-wrap {
+  margin-top: 0.2rem;
+}
+
+.balance-split-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  color: var(--muted-foreground);
+  margin-bottom: 0.35rem;
+}
+
+.balance-split-track {
+  display: flex;
+  height: 16px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.balance-split-ing {
+  background: linear-gradient(90deg, #1b4332, #52b788);
+  min-width: 0;
+  transition: width 0.4s ease;
+}
+
+.balance-split-gas {
+  background: linear-gradient(90deg, #7f1d1d, #e85d6f);
+  min-width: 0;
+  transition: width 0.4s ease;
+}
+
+.balance-bars-detail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.7rem;
+  font-size: 0.78rem;
+  color: #c5d0de;
+}
+
+.balance-bars-detail strong {
+  font-variant-numeric: tabular-nums;
+  color: #e8f0f8;
+}
+
+.month-total-panel {
+  margin: 0 0 0.85rem;
+  padding: 0.85rem 1rem 0.95rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: rgba(17, 21, 28, 0.75);
+}
+
+.month-total-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.55rem;
+}
+
+.month-total-label {
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.month-total-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.month-ruler-track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-bottom: 1.4rem;
+}
+
+.month-ruler-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #52b788, #e8c96b, #e85d6f);
+  transition: width 0.35s ease;
+}
+
+.month-ruler-ticks {
+  position: relative;
+  height: 1.5rem;
+  margin-top: -0.35rem;
+}
+
+.month-ruler-tick {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateX(-0.5px);
+}
+
+.month-ruler-tick-label {
+  position: absolute;
+  top: 8px;
+  transform: translateX(-50%);
+  color: var(--muted-foreground);
+  font-size: 0.64rem;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.month-ruler-tick-label.is-start {
+  transform: translateX(0);
+}
+
+.month-ruler-tick-label.is-end {
+  transform: translateX(-100%);
+}
+
+.month-total-sub {
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+  margin-top: 0.25rem;
+}
+
+.g-legend-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, hsl(155 38% 24%), hsl(100 45% 42%), hsl(37 80% 42%));
+  width: 100%;
+  max-width: 220px;
+}
+
+.category-detail-box {
+  margin-top: 0.9rem;
+  padding: 0.95rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: rgba(17, 21, 28, 0.82);
+}
+
+.cat-detail-row-grid {
+  display: grid;
+  grid-template-columns: 98px minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: center;
+  font-size: 0.82rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.38rem;
+}
+
+.cat-detail-row-grid:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.cat-detail-list-scroll {
+  max-height: 260px;
+  overflow: auto;
+  display: grid;
+  gap: 0.45rem;
+  padding-right: 2px;
+}
