@@ -1,4 +1,4 @@
-import { ChartDemo } from "@/components/chart-demo";
+import { MonthlySpendChart } from "@/components/monthly-spend-chart";
 import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,8 @@ export default function Home() {
             Saldu
           </h1>
           <p className="text-muted-foreground text-sm">
-            Stack: Next.js + Tailwind v4 + shadcn (Base UI) + Recharts
+            Next.js + Tailwind v4 + shadcn + Recharts · datos vía{" "}
+            <code className="bg-muted rounded px-1 text-xs">/api/data</code>
           </p>
         </div>
         <a
@@ -39,7 +40,7 @@ export default function Home() {
           Placeholder: barras por categoría de ingreso.
         </TabsContent>
         <TabsContent value="gastos" className="flex flex-col gap-3">
-          <ChartDemo />
+          <MonthlySpendChart />
         </TabsContent>
       </Tabs>
     </div>
