@@ -10,6 +10,7 @@ import {
   pickDefaultMonth,
 } from "@/lib/gastos-format";
 import type { DashboardPayload, MonthPayload } from "@/lib/gastos-types";
+import { PatrimonioPanel } from "@/components/patrimonio-panel";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 function getVentaCripto(c: Cotizacion | null): number | null {
@@ -509,10 +510,14 @@ export function DashboardShell() {
       )}
       {currencyMeta()}
 
-      <TabsContent value="patrimonio" className="text-muted-foreground text-sm">
-        Próximo paso: gráfico de snapshots y tabla (datos ya vienen en{" "}
-        <code className="bg-muted rounded px-1 text-xs">payload.patrimonio</code>
-        ).
+      <TabsContent value="patrimonio" className="mt-2">
+        {payload.patrimonio ? (
+          <PatrimonioPanel data={payload.patrimonio} />
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            No hay datos de patrimonio disponibles.
+          </p>
+        )}
       </TabsContent>
 
       <TabsContent value="ingresos" className="mt-2">

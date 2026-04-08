@@ -23,10 +23,33 @@ export type MonthPayload = {
   error?: string | null;
 };
 
+export type PatrimonioSnapshot = {
+  fecha: string;
+  fechaSort: number;
+  tc: number;
+  arsLiquido: number;
+  usdLiquido: number;
+  btcCantidad: number;
+  btcSpot: number;
+  btcValorUsd: number;
+  autoArs: number;
+  autoUsd: number;
+  nexoUsd: number;
+  deudaUsd: number;
+  netoUsd: number;
+  notas: string;
+};
+
+export type PatrimonioData = {
+  snapshots: PatrimonioSnapshot[];
+  error?: string | null;
+};
+
 export type DashboardPayload = {
   months: MonthPayload[];
   spreadsheetTitle?: string;
   updatedAt?: string;
   cached?: boolean;
   fxUsdArsCripto?: number | null;
+  patrimonio?: PatrimonioData;
 };

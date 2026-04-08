@@ -286,3 +286,193 @@
   gap: 0.45rem;
   padding-right: 2px;
 }
+
+/* ── Patrimonio ─────────────────────────────────────────── */
+.patrimonio-panel {
+  margin-bottom: 1.35rem;
+  padding: 1.15rem 1.25rem;
+  background: rgba(201, 162, 39, 0.08);
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+}
+.patrimonio-panel h2 {
+  font-size: 1.08rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: #e8c96b;
+}
+.patrimonio-panel .pat-sub {
+  font-size: 0.82rem;
+  color: var(--muted-foreground);
+  margin: 0 0 1rem;
+  line-height: 1.45;
+}
+.patrimonio-latest {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 1rem;
+  color: var(--foreground);
+}
+.patrimonio-chart-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+.patrimonio-chart-wrap svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.patrimonio-line {
+  fill: none;
+  stroke: #e8c96b;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.patrimonio-dot {
+  fill: #fff4d4;
+  stroke: #e8c96b;
+  stroke-width: 2;
+  cursor: pointer;
+}
+.patrimonio-dot.is-selected {
+  fill: #ffe59b;
+  stroke: #fff3ce;
+  stroke-width: 2.6;
+}
+.patrimonio-axis text {
+  fill: var(--muted-foreground);
+  font-size: 0.72rem;
+}
+.patrimonio-axis line,
+.patrimonio-axis path {
+  stroke: var(--border);
+}
+
+/* detail card */
+.patrimonio-detail {
+  margin: 0 0 1rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid rgba(232, 201, 107, 0.34);
+  background: rgba(16, 19, 26, 0.78);
+}
+.patrimonio-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.7rem;
+}
+.patrimonio-detail-title {
+  color: #f6e7b8;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+.patrimonio-detail-meta {
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+}
+.patrimonio-detail-close {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: #111722;
+  color: #cbd5e1;
+  border-radius: 8px;
+  padding: 0.32rem 0.58rem;
+  font-size: 0.76rem;
+  cursor: pointer;
+  min-height: 34px;
+}
+.patrimonio-detail-close:hover {
+  background: #172130;
+}
+.patrimonio-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 0.7rem;
+}
+.patrimonio-kv {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.22rem;
+}
+.patrimonio-kv .k {
+  color: var(--muted-foreground);
+  font-size: 0.76rem;
+}
+.patrimonio-kv .v {
+  color: #eaf1fb;
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.patrimonio-detail-note {
+  margin-top: 0.55rem;
+  color: #cdd6e3;
+  font-size: 0.78rem;
+  line-height: 1.38;
+  overflow-wrap: anywhere;
+}
+.patrimonio-detail-ref {
+  margin-top: 0.42rem;
+  color: var(--muted-foreground);
+  font-size: 0.74rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+/* table */
+.patrimonio-table-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  -webkit-overflow-scrolling: touch;
+}
+.patrimonio-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+.patrimonio-table th,
+.patrimonio-table td {
+  padding: 0.55rem 0.65rem;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+.patrimonio-table th {
+  background: rgba(0, 0, 0, 0.2);
+  color: #c9d2dc;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.patrimonio-table th:first-child,
+.patrimonio-table td:first-child {
+  text-align: left;
+}
+.patrimonio-table tr:last-child td {
+  border-bottom: none;
+}
+.patrimonio-table tbody .pat-row {
+  cursor: pointer;
+}
+.patrimonio-table tbody .pat-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.patrimonio-table tbody .pat-row.is-selected {
+  background: rgba(232, 201, 107, 0.12);
+}
+.patrimonio-table .note {
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
