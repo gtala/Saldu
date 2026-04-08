@@ -12,6 +12,7 @@ import {
 import type { DashboardPayload, MonthPayload } from "@/lib/gastos-types";
 import { PatrimonioPanel } from "@/components/patrimonio-panel";
 import { LiveToastContainer, pushToast } from "@/components/live-toast";
+import { useCountUp } from "@/lib/use-count-up";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 function getVentaCripto(c: Cotizacion | null): number | null {
@@ -23,6 +24,8 @@ function getVentaCripto(c: Cotizacion | null): number | null {
 }
 
 type Cotizacion = { venta?: number | string; fechaActualizacion?: string };
+
+const ANIM_MS = 3000;
 
 function MonthBalanceCard({
   month,
@@ -38,9 +41,6 @@ function MonthBalanceCard({
   if (!Number.isFinite(ing) || ing < 0) ing = 0;
   if (!Number.isFinite(gas) || gas < 0) gas = 0;
   const netArs = ing - gas;
-  const sum = ing + gas;
-  const pctIng = sum > 0 ? (ing / sum) * 100 : 0;
-  const pctGas = sum > 0 ? (gas / sum) * 100 : 0;
   const surplus = netArs > 0;
   const even = netArs === 0;
   const panelCls = even ? "is-even-panel" : surplus ? "is-surplus" : "is-deficit";
@@ -52,19 +52,27 @@ function MonthBalanceCard({
   if (ing <= 0 && gas > 0) pill = "Déficit del mes";
   if (ing > 0 && gas <= 0) pill = "Ganancia del mes";
 
+  const fmt = (n: number) => formatMoneyArs(n, currency, venta);
+  const ingAnim = useCountUp(ing, ANIM_MS, fmt);
+  const gasAnim = useCountUp(gas, ANIM_MS, fmt);
+  const netAnim = useCountUp(Math.abs(netArs), ANIM_MS, fmt);
+  const pctIngAnim = useCountUp(ing, ANIM_MS);
+  const pctGasAnim = useCountUp(gas, ANIM_MS);
+
+  // porcentajes animados basados en los valores intermedios del counter
+  const sumAnim = Number(pctIngAnim.replace(/\D/g, "")) + Number(pctGasAnim.replace(/\D/g, ""));
+  const animIng = sumAnim > 0 ? (Number(pctIngAnim.replace(/\D/g, "")) / sumAnim) * 100 : 0;
+  const animGas = sumAnim > 0 ? (Number(pctGasAnim.replace(/\D/g, "")) / sumAnim) * 100 : 0;
+
   const sign = netArs > 0 ? "+" : netArs < 0 ? "−" : "";
-  const netDisplay =
-    sign + formatMoneyArs(Math.abs(netArs), currency, venta);
 
   return (
     <section className={`month-balance-panel ${panelCls}`} aria-label="Balance del mes">
       <div className="balance-pill">{pill}</div>
       <div className="balance-net-row">
         <span className="balance-net-label">Ingresos − gastos</span>
-        <span
-          className={`balance-net-value${even ? " is-even" : ""}`}
-        >
-          {netDisplay}
+        <span className={`balance-net-value${even ? " is-even" : ""}`}>
+          {sign}{netAnim}
         </span>
       </div>
       <div className="balance-split-wrap">
@@ -73,26 +81,18 @@ function MonthBalanceCard({
           <span>Gastos</span>
         </div>
         <div className="balance-split-track">
-          <span
-            className="balance-split-ing"
-            style={{ width: `${pctIng.toFixed(2)}%` }}
-          />
-          <span
-            className="balance-split-gas"
-            style={{ width: `${pctGas.toFixed(2)}%` }}
-          />
+          <span className="balance-split-ing" style={{ width: `${animIng.toFixed(2)}%`, transition: `width ${ANIM_MS}ms cubic-bezier(0.25,1,0.5,1)` }} />
+          <span className="balance-split-gas" style={{ width: `${animGas.toFixed(2)}%`, transition: `width ${ANIM_MS}ms cubic-bezier(0.25,1,0.5,1)` }} />
         </div>
       </div>
       <div className="balance-bars-detail">
         <div>
-          Total ingresos
-          <br />
-          <strong>{formatMoneyArs(ing, currency, venta)}</strong>
+          Total ingresos<br />
+          <strong>{ingAnim}</strong>
         </div>
         <div className="text-right">
-          Total gastos
-          <br />
-          <strong>{formatMoneyArs(gas, currency, venta)}</strong>
+          Total gastos<br />
+          <strong>{gasAnim}</strong>
         </div>
       </div>
     </section>
@@ -119,9 +119,15 @@ function MonthTotalCard({
     tickCount = Math.ceil(totalDisplay / step) || 1;
   }
   const maxDisplay = Math.max(step, Math.ceil(totalDisplay / step) * step);
+
+  const animatedTotal = useCountUp(totalArs, ANIM_MS, (v) =>
+    formatMoneyArs(v, currency, venta)
+  );
+  const animatedDisplay = useCountUp(totalDisplay, ANIM_MS);
+  const animDisplayNum = parseFloat(animatedDisplay.replace(/\./g, "").replace(",", ".")) || 0;
   const fillPct =
     maxDisplay > 0
-      ? Math.max(0, Math.min(100, (totalDisplay / maxDisplay) * 100))
+      ? Math.max(0, Math.min(100, (animDisplayNum / maxDisplay) * 100))
       : 0;
 
   const ticks: number[] = [];
@@ -141,14 +147,12 @@ function MonthTotalCard({
     <section className="month-total-panel" aria-label="Total del mes">
       <div className="month-total-head">
         <span className="month-total-label">Total acumulado del mes</span>
-        <strong className="month-total-value">
-          {formatMoneyArs(totalArs, currency, venta)}
-        </strong>
+        <strong className="month-total-value">{animatedTotal}</strong>
       </div>
       <div className="month-ruler-track">
         <span
           className="month-ruler-fill"
-          style={{ width: `${fillPct.toFixed(2)}%` }}
+          style={{ width: `${fillPct.toFixed(2)}%`, transition: `width ${ANIM_MS}ms cubic-bezier(0.25,1,0.5,1)` }}
         />
       </div>
       <div className="month-ruler-ticks">

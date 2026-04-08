@@ -143,8 +143,8 @@ export function ExpensesTreemap({
 
     rects
       .transition()
-      .duration(600)
-      .delay((_d, i) => i * 35)
+      .duration(2000)
+      .delay((_d, i) => i * 60)
       .ease(d3.easeCubicOut)
       .attr("width", (d) => Math.max(0, d.x1 - d.x0))
       .attr("height", (d) => Math.max(0, d.y1 - d.y0));
