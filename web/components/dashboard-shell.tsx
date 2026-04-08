@@ -346,8 +346,11 @@ export function DashboardShell() {
         }
       }
 
+      // solo actualizar el estado si los datos realmente cambiaron
+      const prevUpdatedAt = prevPayloadRef.current?.updatedAt;
+      const hasNewData = !prevUpdatedAt || j.updatedAt !== prevUpdatedAt;
       prevPayloadRef.current = j;
-      setPayload(j);
+      if (hasNewData || !isPolling) setPayload(j);
       const months = j.months ?? [];
       if (months.length) {
         const def = pickDefaultMonth(months);
