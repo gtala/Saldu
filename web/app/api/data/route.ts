@@ -15,7 +15,7 @@ type SheetsModule = {
 /** Ruta estática (Turbopack no acepta import(file:// dinámico)). */
 async function loadFetchMonthlyTotals(): Promise<() => Promise<unknown>> {
   const mod = (await import(
-    "../../../../sheets.js"
+    "../../../sheets.js"
   )) as SheetsModule;
   const fn = mod.fetchMonthlyTotals ?? mod.default?.fetchMonthlyTotals;
   if (typeof fn !== "function") {

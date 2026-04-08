@@ -5,12 +5,8 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
-  // Permite importar `../../../../sheets.js` desde app/ (monorepo).
-  experimental: {
-    externalDir: true,
-  },
-  // Repo raíz tiene otro package-lock (app Node legacy); evita warning de tracing.
-  outputFileTracingRoot: path.join(__dirname, ".."),
+  // sheets.js vive en web/ — Next.js lo traza desde aquí.
+  outputFileTracingRoot: __dirname,
   serverExternalPackages: [
     "googleapis",
     "google-auth-library",
