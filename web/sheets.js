@@ -273,7 +273,7 @@ async function fetchPatrimonioSnapshots(sheets, spreadsheetId) {
   }
 }
 
-let cache = { at: 0, ttlMs: 60_000, data: null };
+let cache = { at: 0, ttlMs: 10_000, data: null };
 
 async function getClient() {
   // 1. Credenciales como JSON string (Vercel y otros PaaS sin filesystem)
