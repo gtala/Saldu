@@ -9,3 +9,4 @@ dotted-electron-*.json
 *.pem
 .DS_Store
 deploy-instructions.txt
+.vercel

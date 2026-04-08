@@ -4,7 +4,7 @@
 require("dotenv").config();
 const http = require("http");
 const https = require("https");
-const { fetchMonthlyTotals } = require("./sheets");
+const { fetchMonthlyTotals } = require("./web/sheets");
 
 const DOLAR_CRIPTO_URL = "https://dolarapi.com/v1/dolares/cripto";
 
