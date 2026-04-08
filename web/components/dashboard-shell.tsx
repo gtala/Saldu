@@ -11,7 +11,8 @@ import {
 } from "@/lib/gastos-format";
 import type { DashboardPayload, MonthPayload } from "@/lib/gastos-types";
 import { PatrimonioPanel } from "@/components/patrimonio-panel";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { LiveToastContainer, pushToast } from "@/components/live-toast";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 function getVentaCripto(c: Cotizacion | null): number | null {
   if (!c) return null;
@@ -301,11 +302,12 @@ export function DashboardShell() {
   const [currency, setCurrency] = useState<"ARS" | "USD">("ARS");
   const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const prevPayloadRef = useRef<DashboardPayload | null>(null);
 
   const venta = useMemo(() => getVentaCripto(cotizacion), [cotizacion]);
 
-  const loadData = useCallback(async () => {
-    setLoadErr(null);
+  const loadData = useCallback(async (isPolling = false) => {
+    if (!isPolling) setLoadErr(null);
     try {
       const r = await fetch("/api/data", { cache: "no-store" });
       const j = (await r.json()) as DashboardPayload & {
@@ -315,6 +317,36 @@ export function DashboardShell() {
       if (!r.ok) {
         throw new Error(j.error || `HTTP ${r.status}`);
       }
+
+      // detect changes and fire toasts on polling updates
+      if (isPolling && prevPayloadRef.current) {
+        const prev = prevPayloadRef.current;
+        for (const newMonth of j.months ?? []) {
+          const oldMonth = prev.months?.find((m) => m.name === newMonth.name);
+          if (!oldMonth) continue;
+
+          const gastosDiff = (newMonth.total ?? 0) - (oldMonth.total ?? 0);
+          if (gastosDiff > 0) {
+            pushToast({
+              type: "gasto",
+              label: `Nuevo gasto — ${newMonth.name}`,
+              amount: formatMoneyArs(gastosDiff, "ARS", null),
+            });
+          }
+
+          const ingresosDiff =
+            (newMonth.totalIngresos ?? 0) - (oldMonth.totalIngresos ?? 0);
+          if (ingresosDiff > 0) {
+            pushToast({
+              type: "ingreso",
+              label: `Nuevo ingreso — ${newMonth.name}`,
+              amount: formatMoneyArs(ingresosDiff, "ARS", null),
+            });
+          }
+        }
+      }
+
+      prevPayloadRef.current = j;
       setPayload(j);
       const months = j.months ?? [];
       if (months.length) {
@@ -325,13 +357,22 @@ export function DashboardShell() {
         });
       }
     } catch (e) {
-      setLoadErr(e instanceof Error ? e.message : "Error");
-      setPayload(null);
+      if (!isPolling) {
+        setLoadErr(e instanceof Error ? e.message : "Error");
+        setPayload(null);
+      }
     }
   }, []);
 
+  // initial load
   useEffect(() => {
-    loadData();
+    loadData(false);
+  }, [loadData]);
+
+  // polling cada 10 segundos
+  useEffect(() => {
+    const id = setInterval(() => loadData(true), 10_000);
+    return () => clearInterval(id);
   }, [loadData]);
 
   useEffect(() => {
@@ -448,6 +489,7 @@ export function DashboardShell() {
   const showToolbar = tab !== "patrimonio";
 
   return (
+    <>
     <Tabs value={tab} onValueChange={setTab} className="gap-4">
       <TabsList className="w-full max-w-md" variant="line">
         <TabsTrigger value="patrimonio">Patrimonio</TabsTrigger>
@@ -565,5 +607,7 @@ export function DashboardShell() {
         </p>
       ) : null}
     </Tabs>
+    <LiveToastContainer />
+    </>
   );
 }

@@ -132,14 +132,22 @@ export function ExpensesTreemap({
     const rects = g
       .append("rect")
       .attr("class", "g-cell-rect")
-      .attr("width", (d) => Math.max(0, d.x1 - d.x0))
-      .attr("height", (d) => Math.max(0, d.y1 - d.y0))
       .attr("rx", 10)
       .attr("ry", 10)
       .attr("fill", (d) => heatFill(d.data.total, maxV))
       .attr("stroke", "rgba(255,255,255,0.1)")
       .attr("stroke-width", 1)
+      .attr("width", 0)
+      .attr("height", 0)
       .classed("is-selected", (d) => (d.data.name || "") === selectedCategory);
+
+    rects
+      .transition()
+      .duration(600)
+      .delay((_d, i) => i * 35)
+      .ease(d3.easeCubicOut)
+      .attr("width", (d) => Math.max(0, d.x1 - d.x0))
+      .attr("height", (d) => Math.max(0, d.y1 - d.y0));
 
     g.each(function (d) {
       const cw = d.x1 - d.x0;
