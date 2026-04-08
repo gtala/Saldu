@@ -116,6 +116,7 @@ export function ExpensesTreemap({
       .data(leaves)
       .join("g")
       .attr("class", "g-cell")
+      .attr("data-name", (d) => d.data.name || "")
       .attr("transform", (d) => `translate(${d.x0},${d.y0})`)
       .attr("tabindex", 0)
       .attr("role", "button")
@@ -229,24 +230,17 @@ export function ExpensesTreemap({
       gEl.appendChild(fo);
     });
 
-    function selectCategory(name: string) {
-      onSelectCategory(name);
-      rects.classed("is-selected", (d) => (d.data.name || "") === name);
-    }
-
-    g.on("click", (_event, d) => selectCategory(d.data.name || ""));
+    g.on("click", (_event, d) => onSelectCategory(d.data.name || ""));
     g.on("keydown", (event, d) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        selectCategory(d.data.name || "");
+        onSelectCategory(d.data.name || "");
       }
     });
 
     rootEl.innerHTML = "";
     const node = svg.node();
     if (node) rootEl.appendChild(node);
-
-    rects.classed("is-selected", (d) => (d.data.name || "") === selectedCategory);
 
     if (!month.hasCategoryColumn) {
       const hint = document.createElement("p");
@@ -263,9 +257,18 @@ export function ExpensesTreemap({
     dims.narrow,
     currency,
     ventaCripto,
-    selectedCategory,
     onSelectCategory,
   ]);
+
+  // actualiza solo la clase is-selected sin reconstruir el SVG
+  useEffect(() => {
+    const rootEl = hostRef.current;
+    if (!rootEl) return;
+    rootEl.querySelectorAll<SVGRectElement>(".g-cell-rect").forEach((rect) => {
+      const name = rect.closest(".g-cell")?.getAttribute("data-name") || "";
+      rect.classList.toggle("is-selected", name === selectedCategory);
+    });
+  }, [selectedCategory]);
 
   if (!month) return null;
 
