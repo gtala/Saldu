@@ -276,6 +276,22 @@ async function fetchPatrimonioSnapshots(sheets, spreadsheetId) {
 let cache = { at: 0, ttlMs: 60_000, data: null };
 
 async function getClient() {
+  // 1. Credenciales como JSON string (Vercel y otros PaaS sin filesystem)
+  const saJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (saJson) {
+    try {
+      const credentials = JSON.parse(saJson);
+      const auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+      });
+      return google.sheets({ version: "v4", auth });
+    } catch (e) {
+      console.error("[sheets] GOOGLE_SERVICE_ACCOUNT_JSON inválido:", e.message);
+    }
+  }
+
+  // 2. Ruta a archivo de Service Account (servidor con filesystem)
   const keyFile = process.env.GOOGLE_APPLICATION_CREDENTIALS;
   if (keyFile && fs.existsSync(keyFile)) {
     const auth = new google.auth.GoogleAuth({
@@ -285,6 +301,7 @@ async function getClient() {
     return google.sheets({ version: "v4", auth });
   }
 
+  // 3. Service Account desde DB de n8n (Docker)
   const n8nSa = getServiceAccountFromN8n();
   if (n8nSa) {
     const auth = new google.auth.GoogleAuth({
