@@ -346,9 +346,17 @@ export function DashboardShell() {
         }
       }
 
-      // solo actualizar el estado si los datos realmente cambiaron
-      const prevUpdatedAt = prevPayloadRef.current?.updatedAt;
-      const hasNewData = !prevUpdatedAt || j.updatedAt !== prevUpdatedAt;
+      // fingerprint basado en los datos reales (no el timestamp)
+      const fingerprint = (data: typeof j) =>
+        (data.months ?? [])
+          .map((m) => `${m.name}:${m.total}:${m.totalIngresos}`)
+          .join("|") +
+        "|pat:" +
+        (data.patrimonio?.snapshots?.length ?? 0);
+
+      const prevFp = prevPayloadRef.current ? fingerprint(prevPayloadRef.current) : null;
+      const newFp = fingerprint(j);
+      const hasNewData = prevFp === null || prevFp !== newFp;
       prevPayloadRef.current = j;
       if (hasNewData || !isPolling) setPayload(j);
       const months = j.months ?? [];
