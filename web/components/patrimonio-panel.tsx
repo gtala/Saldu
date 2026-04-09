@@ -294,7 +294,11 @@ export function PatrimonioPanel({ data }: { data: PatrimonioData }) {
   const v = (val: number) => mask(fmtUsd(val), isHidden);
 
   return (
-    <section className="patrimonio-panel" aria-label="Patrimonio en USD" ref={wrapRef}>
+    <section
+      className={`patrimonio-panel${isHidden ? " is-values-hidden" : ""}`}
+      aria-label="Patrimonio en USD"
+      ref={wrapRef}
+    >
       <div className="patrimonio-panel-header">
         <h2>Patrimonio (USD)</h2>
         <button
