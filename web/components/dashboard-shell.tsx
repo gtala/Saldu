@@ -384,10 +384,29 @@ export function DashboardShell() {
     loadData(false);
   }, [loadData]);
 
-  // polling cada 10 segundos
+  // SSE: escucha /api/stream y recarga cuando hay datos nuevos
   useEffect(() => {
-    const id = setInterval(() => loadData(true), 10_000);
-    return () => clearInterval(id);
+    let es: EventSource | null = null;
+
+    const connect = () => {
+      es = new EventSource("/api/stream");
+
+      es.onmessage = (e) => {
+        if (e.data === "update") {
+          loadData(true);
+        }
+        // "connected", "reconnect" y heartbeats los ignoramos
+      };
+
+      es.onerror = () => {
+        // EventSource reconecta automáticamente; cerramos la instancia rota
+        // para que el browser maneje el back-off de reconexión nativo
+        es?.close();
+      };
+    };
+
+    connect();
+    return () => es?.close();
   }, [loadData]);
 
   useEffect(() => {

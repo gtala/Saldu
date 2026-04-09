@@ -535,4 +535,8 @@ async function fetchMonthlyTotals() {
   return payload;
 }
 
-module.exports = { fetchMonthlyTotals, getClient, fetchPatrimonioSnapshots };
+function clearCache() {
+  cache.at = 0;
+}
+
+module.exports = { fetchMonthlyTotals, getClient, fetchPatrimonioSnapshots, clearCache };
