@@ -10,8 +10,9 @@ loadEnv({ path: path.join(process.cwd(), "..", ".env") });
 const NOTIFY_SECRET = process.env.NOTIFY_SECRET ?? "";
 
 type SheetsModule = {
-  clearCache: () => void;
-  default?: { clearCache: () => void };
+  clearCache?: () => void;
+  default?: { clearCache?: () => void };
+  [key: string]: unknown;
 };
 
 export async function POST(req: Request) {
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const mod = (await import("../../../../sheets.js")) as SheetsModule;
+    const mod = (await import("../../../../sheets.js")) as unknown as SheetsModule;
     const clear = mod.clearCache ?? mod.default?.clearCache;
     if (typeof clear === "function") clear();
   } catch {

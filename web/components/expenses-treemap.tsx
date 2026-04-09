@@ -250,15 +250,8 @@ export function ExpensesTreemap({
         "No hay columna <strong>Categoría</strong> en la planilla: todo se agrupa como una sola categoría.";
       rootEl.parentElement?.appendChild(hint);
     }
-  }, [
-    month,
-    dims.w,
-    dims.h,
-    dims.narrow,
-    currency,
-    ventaCripto,
-    onSelectCategory,
-  ]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [month, dims.w, dims.h, dims.narrow, currency, ventaCripto, onSelectCategory]);
 
   // actualiza solo la clase is-selected sin reconstruir el SVG
   useEffect(() => {
