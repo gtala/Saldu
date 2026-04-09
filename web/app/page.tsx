@@ -11,8 +11,7 @@ export default function Home() {
             Gastos y patrimonio
           </h1>
           <p className="text-muted-foreground text-sm">
-            Saldu · Next.js + Tailwind + shadcn + D3 treemap ·{" "}
-            <code className="bg-muted rounded px-1 text-xs">/api/data</code>
+            Tu resumen financiero personal
           </p>
         </div>
         <a

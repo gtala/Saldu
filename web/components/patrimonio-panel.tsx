@@ -5,6 +5,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { fmtArs, fmtUsd } from "@/lib/gastos-format";
 import type { PatrimonioData, PatrimonioSnapshot } from "@/lib/gastos-types";
 
+const HIDDEN = "••••••";
+
+function mask(value: string, hidden: boolean) {
+  return hidden ? HIDDEN : value;
+}
+
 function snapshotKey(d: PatrimonioSnapshot) {
   return `${d.fecha}|${d.fechaSort}`;
 }
@@ -18,21 +24,25 @@ function rowDate(d: PatrimonioSnapshot): Date {
 function DetailCard({
   snap,
   onClose,
+  isHidden,
 }: {
   snap: PatrimonioSnapshot;
   onClose: () => void;
+  isHidden: boolean;
 }) {
   const refs: string[] = [];
-  if (Number(snap.btcCantidad || 0) > 0)
-    refs.push(
-      `BTC cantidad: ${Number(snap.btcCantidad).toLocaleString("es-AR", { maximumFractionDigits: 8 })}`
-    );
-  if (Number(snap.btcSpot || 0) > 0)
-    refs.push(`BTC precio snapshot: ${fmtUsd(snap.btcSpot)}`);
-  if (Number(snap.autoArs || 0) > 0)
-    refs.push(
-      `Auto ARS (referencia): ${fmtArs(snap.autoArs)}`
-    );
+  if (!isHidden) {
+    if (Number(snap.btcCantidad || 0) > 0)
+      refs.push(
+        `BTC cantidad: ${Number(snap.btcCantidad).toLocaleString("es-AR", { maximumFractionDigits: 8 })}`
+      );
+    if (Number(snap.btcSpot || 0) > 0)
+      refs.push(`BTC precio snapshot: ${fmtUsd(snap.btcSpot)}`);
+    if (Number(snap.autoArs || 0) > 0)
+      refs.push(`Auto ARS (referencia): ${fmtArs(snap.autoArs)}`);
+  }
+
+  const v = (val: number) => mask(fmtUsd(val), isHidden);
 
   return (
     <div className="patrimonio-detail">
@@ -56,32 +66,32 @@ function DetailCard({
       <div className="patrimonio-detail-grid">
         <div className="patrimonio-kv">
           <span className="k">Neto USD</span>
-          <strong className="v">{fmtUsd(snap.netoUsd ?? 0)}</strong>
+          <strong className="v">{v(snap.netoUsd ?? 0)}</strong>
         </div>
         <div className="patrimonio-kv">
           <span className="k">USD líquido</span>
-          <span className="v">{fmtUsd(snap.usdLiquido ?? 0)}</span>
+          <span className="v">{v(snap.usdLiquido ?? 0)}</span>
         </div>
         <div className="patrimonio-kv">
           <span className="k">BTC valor USD</span>
-          <span className="v">{fmtUsd(snap.btcValorUsd ?? 0)}</span>
+          <span className="v">{v(snap.btcValorUsd ?? 0)}</span>
         </div>
         <div className="patrimonio-kv">
           <span className="k">Auto USD</span>
-          <span className="v">{fmtUsd(snap.autoUsd ?? 0)}</span>
+          <span className="v">{v(snap.autoUsd ?? 0)}</span>
         </div>
         <div className="patrimonio-kv">
           <span className="k">NEXO + stable</span>
-          <span className="v">{fmtUsd(snap.nexoUsd ?? 0)}</span>
+          <span className="v">{v(snap.nexoUsd ?? 0)}</span>
         </div>
         <div className="patrimonio-kv">
           <span className="k">Deuda USD (resta)</span>
-          <span className="v">- {fmtUsd(snap.deudaUsd ?? 0)}</span>
+          <span className="v">- {v(snap.deudaUsd ?? 0)}</span>
         </div>
       </div>
       {snap.notas?.trim() ? (
         <div className="patrimonio-detail-note">
-          <strong>Notas:</strong> {snap.notas.trim()}
+          <strong>Notas:</strong> {isHidden ? HIDDEN : snap.notas.trim()}
         </div>
       ) : null}
       {refs.length > 0 ? (
@@ -97,6 +107,7 @@ export function PatrimonioPanel({ data }: { data: PatrimonioData }) {
   const chartHostRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [selectedKey, setSelectedKey] = useState<string>("");
+  const [isHidden, setIsHidden] = useState(true);
 
   const { snapshots = [], error } = data;
 
@@ -105,9 +116,19 @@ export function PatrimonioPanel({ data }: { data: PatrimonioData }) {
     try {
       const saved = localStorage.getItem("selectedSnapshotKey") || "";
       setSelectedKey(saved);
+      const h = localStorage.getItem("patrimonioHidden");
+      setIsHidden(h !== "false");
     } catch {
       /* ignore */
     }
+  }, []);
+
+  const toggleHidden = useCallback(() => {
+    setIsHidden((prev) => {
+      const next = !prev;
+      try { localStorage.setItem("patrimonioHidden", String(next)); } catch { /* ignore */ }
+      return next;
+    });
   }, []);
 
   const handleSelect = useCallback((key: string) => {
@@ -270,9 +291,33 @@ export function PatrimonioPanel({ data }: { data: PatrimonioData }) {
   const selectedSnap = snapshots.find((s) => snapshotKey(s) === selectedKey) ?? null;
   const reversedSnaps = [...snapshots].reverse();
 
+  const v = (val: number) => mask(fmtUsd(val), isHidden);
+
   return (
     <section className="patrimonio-panel" aria-label="Patrimonio en USD" ref={wrapRef}>
-      <h2>Patrimonio (USD)</h2>
+      <div className="patrimonio-panel-header">
+        <h2>Patrimonio (USD)</h2>
+        <button
+          type="button"
+          className="patrimonio-eye-btn"
+          onClick={toggleHidden}
+          aria-label={isHidden ? "Mostrar valores" : "Ocultar valores"}
+          title={isHidden ? "Mostrar valores" : "Ocultar valores"}
+        >
+          {isHidden ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          )}
+        </button>
+      </div>
       <p className="pat-sub">
         Datos de la pestaña <strong>Patrimonio</strong>. El gráfico muestra el{" "}
         <strong>patrimonio neto</strong> por fecha de snapshot; hacé click en un
@@ -280,13 +325,13 @@ export function PatrimonioPanel({ data }: { data: PatrimonioData }) {
       </p>
       <div className="patrimonio-latest">
         Último snapshot ({last.fecha}):{" "}
-        <strong>{fmtUsd(last.netoUsd ?? 0)}</strong> neto
+        <strong>{v(last.netoUsd ?? 0)}</strong> neto
       </div>
       <div className="patrimonio-chart-wrap">
         <div ref={chartHostRef} />
       </div>
       {selectedSnap ? (
-        <DetailCard snap={selectedSnap} onClose={handleClose} />
+        <DetailCard snap={selectedSnap} onClose={handleClose} isHidden={isHidden} />
       ) : null}
       <div className="patrimonio-table-wrap">
         <table className="patrimonio-table" aria-label="Historial de snapshots">
@@ -314,17 +359,14 @@ export function PatrimonioPanel({ data }: { data: PatrimonioData }) {
                   style={{ cursor: "pointer" }}
                 >
                   <td>{d.fecha}</td>
-                  <td>{fmtUsd(d.netoUsd ?? 0)}</td>
-                  <td>{fmtUsd(d.usdLiquido ?? 0)}</td>
-                  <td>{fmtUsd(d.btcValorUsd ?? 0)}</td>
-                  <td>{fmtUsd(d.autoUsd ?? 0)}</td>
-                  <td>{fmtUsd(d.nexoUsd ?? 0)}</td>
-                  <td>{fmtUsd(d.deudaUsd ?? 0)}</td>
-                  <td
-                    className="note"
-                    title={note}
-                  >
-                    {note.length > 80 ? `${note.slice(0, 80)}…` : note}
+                  <td>{v(d.netoUsd ?? 0)}</td>
+                  <td>{v(d.usdLiquido ?? 0)}</td>
+                  <td>{v(d.btcValorUsd ?? 0)}</td>
+                  <td>{v(d.autoUsd ?? 0)}</td>
+                  <td>{v(d.nexoUsd ?? 0)}</td>
+                  <td>{v(d.deudaUsd ?? 0)}</td>
+                  <td className="note" title={isHidden ? "" : note}>
+                    {isHidden ? HIDDEN : (note.length > 80 ? `${note.slice(0, 80)}…` : note)}
                   </td>
                 </tr>
               );

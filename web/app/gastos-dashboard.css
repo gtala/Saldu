@@ -296,11 +296,33 @@
   border-radius: var(--radius-lg, 12px);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
 }
+.patrimonio-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 0.5rem;
+}
 .patrimonio-panel h2 {
   font-size: 1.08rem;
   font-weight: 600;
-  margin: 0 0 0.5rem;
+  margin: 0;
   color: #e8c96b;
+}
+.patrimonio-eye-btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(232, 201, 107, 0.3);
+  color: #e8c96b;
+  border-radius: 8px;
+  padding: 0.28rem 0.48rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.patrimonio-eye-btn:hover {
+  background: rgba(232, 201, 107, 0.1);
+  border-color: rgba(232, 201, 107, 0.6);
 }
 .patrimonio-panel .pat-sub {
   font-size: 0.82rem;
