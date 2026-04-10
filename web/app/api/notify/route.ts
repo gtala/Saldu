@@ -1,3 +1,4 @@
+import { bumpSheetRevision } from "@/lib/sheet-revision";
 import { config as loadEnv } from "dotenv";
 import path from "path";
 
@@ -31,6 +32,12 @@ export async function POST(req: Request) {
     if (typeof clear === "function") clear();
   } catch {
     // si no se puede importar, igual respondemos OK
+  }
+
+  try {
+    await bumpSheetRevision();
+  } catch {
+    /* Redis opcional */
   }
 
   return Response.json({ ok: true, ts: Date.now() });

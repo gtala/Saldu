@@ -307,6 +307,7 @@ export function DashboardShell() {
   const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("");
   const prevPayloadRef = useRef<DashboardPayload | null>(null);
+  const sheetRevisionRef = useRef<number>(-1);
 
   const venta = useMemo(() => getVentaCripto(cotizacion), [cotizacion]);
 
@@ -386,11 +387,51 @@ export function DashboardShell() {
     loadData(false);
   }, [loadData]);
 
-  // Polling fiable: SSE + caché en memoria no funcionan bien en Vercel (varias instancias).
-  // Cada tick usa ?fresh=1; el UI solo se actualiza si cambió el fingerprint (sin animar al pedo).
+  // Con Upstash (live): n8n → POST /api/notify → incr en Redis; acá solo leemos /api/version (liviano).
+  // Sin Redis: respaldo cada 60s a /api/data (edits manuales en Sheets sin n8n).
   useEffect(() => {
-    const id = setInterval(() => loadData(true), 10_000);
-    return () => clearInterval(id);
+    let cancelled = false;
+    let timer: ReturnType<typeof setInterval> | undefined;
+
+    const arm = async () => {
+      try {
+        const r = await fetch("/api/version", { cache: "no-store" });
+        const j = (await r.json()) as { version: number; live: boolean };
+        if (cancelled) return;
+
+        if (j.live) {
+          sheetRevisionRef.current = j.version;
+          timer = setInterval(async () => {
+            if (cancelled) return;
+            try {
+              const r2 = await fetch("/api/version", { cache: "no-store" });
+              const n = (await r2.json()) as { version: number; live: boolean };
+              if (n.version !== sheetRevisionRef.current) {
+                const hadPrior = sheetRevisionRef.current !== -1;
+                sheetRevisionRef.current = n.version;
+                if (hadPrior) await loadData(true);
+              }
+            } catch {
+              /* ignore */
+            }
+          }, 3000);
+        } else {
+          timer = setInterval(() => {
+            if (!cancelled) loadData(true);
+          }, 60_000);
+        }
+      } catch {
+        if (!cancelled) {
+          timer = setInterval(() => loadData(true), 60_000);
+        }
+      }
+    };
+
+    void arm();
+    return () => {
+      cancelled = true;
+      if (timer) clearInterval(timer);
+    };
   }, [loadData]);
 
   useEffect(() => {
