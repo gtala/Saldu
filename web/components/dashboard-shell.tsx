@@ -313,7 +313,9 @@ export function DashboardShell() {
   const loadData = useCallback(async (isPolling = false) => {
     if (!isPolling) setLoadErr(null);
     try {
-      const r = await fetch("/api/data", { cache: "no-store" });
+      const dataUrl =
+        isPolling ? `/api/data?fresh=1&r=${Date.now()}` : "/api/data";
+      const r = await fetch(dataUrl, { cache: "no-store" });
       const j = (await r.json()) as DashboardPayload & {
         error?: string;
         code?: string;
@@ -353,7 +355,7 @@ export function DashboardShell() {
       // fingerprint basado en los datos reales (no el timestamp)
       const fingerprint = (data: typeof j) =>
         (data.months ?? [])
-          .map((m) => `${m.name}:${m.total}:${m.totalIngresos}`)
+          .map((m) => `${m.name}:${m.total}:${m.totalIngresos}:${m.rowCount ?? 0}`)
           .join("|") +
         "|pat:" +
         (data.patrimonio?.snapshots?.length ?? 0);

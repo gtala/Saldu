@@ -9,24 +9,31 @@ loadEnv({ path: path.join(process.cwd(), "..", ".env") });
 
 type SheetsModule = {
   fetchMonthlyTotals: () => Promise<unknown>;
-  default?: { fetchMonthlyTotals: () => Promise<unknown> };
+  clearCache?: () => void;
+  default?: { fetchMonthlyTotals: () => Promise<unknown>; clearCache?: () => void };
 };
 
 /** Ruta estática (Turbopack no acepta import(file:// dinámico)). */
-async function loadFetchMonthlyTotals(): Promise<() => Promise<unknown>> {
-  const mod = (await import(
-    "../../../sheets.js"
-  )) as SheetsModule;
-  const fn = mod.fetchMonthlyTotals ?? mod.default?.fetchMonthlyTotals;
-  if (typeof fn !== "function") {
-    throw new Error("sheets.js no exporta fetchMonthlyTotals");
-  }
-  return fn;
+async function loadSheetsModule(): Promise<SheetsModule> {
+  return (await import("../../../sheets.js")) as SheetsModule;
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const fetchMonthlyTotals = await loadFetchMonthlyTotals();
+    const url = new URL(req.url);
+    const wantFresh = url.searchParams.has("fresh");
+
+    const mod = await loadSheetsModule();
+    if (wantFresh) {
+      const clear = mod.clearCache ?? mod.default?.clearCache;
+      if (typeof clear === "function") clear();
+    }
+
+    const fetchMonthlyTotals =
+      mod.fetchMonthlyTotals ?? mod.default?.fetchMonthlyTotals;
+    if (typeof fetchMonthlyTotals !== "function") {
+      throw new Error("sheets.js no exporta fetchMonthlyTotals");
+    }
     const data = await fetchMonthlyTotals();
     return Response.json(data, {
       headers: { "Cache-Control": "no-store, max-age=0" },

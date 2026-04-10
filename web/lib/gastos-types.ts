@@ -16,6 +16,8 @@ export type MonthPayload = {
   name: string;
   total: number;
   totalIngresos: number;
+  /** Filas de datos (sin header) en la pestaña del mes */
+  rowCount?: number;
   categories: MonthCategory[];
   categoryDetails?: Record<string, CategoryMovement[]>;
   hasCategoryColumn?: boolean;

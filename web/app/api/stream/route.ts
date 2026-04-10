@@ -13,13 +13,15 @@ type SheetsModule = {
 };
 
 type Payload = {
-  months?: Array<{ name: string; total?: number; totalIngresos?: number }>;
+  months?: Array<{ name: string; total?: number; totalIngresos?: number; rowCount?: number }>;
   patrimonio?: { snapshots?: unknown[] };
 };
 
 function fingerprint(data: Payload): string {
   return (
-    (data.months ?? []).map((m) => `${m.name}:${m.total}:${m.totalIngresos}`).join("|") +
+    (data.months ?? [])
+      .map((m) => `${m.name}:${m.total}:${m.totalIngresos}:${m.rowCount ?? 0}`)
+      .join("|") +
     "|pat:" +
     (data.patrimonio?.snapshots?.length ?? 0)
   );
