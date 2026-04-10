@@ -26,7 +26,7 @@ function fingerprint(data: Payload): string {
 }
 
 async function loadFetch(): Promise<() => Promise<unknown>> {
-  const mod = (await import("../../../../sheets.js")) as SheetsModule;
+  const mod = (await import("../../../sheets.js")) as SheetsModule;
   const fn = mod.fetchMonthlyTotals ?? mod.default?.fetchMonthlyTotals;
   if (typeof fn !== "function") throw new Error("no fetchMonthlyTotals");
   return fn;

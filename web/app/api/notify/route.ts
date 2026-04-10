@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const mod = (await import("../../../../sheets.js")) as unknown as SheetsModule;
+    const mod = (await import("../../../sheets.js")) as unknown as SheetsModule;
     const clear = mod.clearCache ?? mod.default?.clearCache;
     if (typeof clear === "function") clear();
   } catch {
