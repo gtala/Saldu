@@ -275,6 +275,17 @@ async function fetchPatrimonioSnapshots(sheets, spreadsheetId) {
 
 let cache = { at: 0, ttlMs: 10_000, data: null };
 
+/** En Vercel (varias instancias) el caché en memoria da datos viejos; TTL 0 = siempre Sheets. */
+function getSheetsCacheTtlMs() {
+  const raw = process.env.SHEETS_CACHE_TTL_MS;
+  if (raw !== undefined && raw !== "") {
+    const n = parseInt(String(raw), 10);
+    if (Number.isFinite(n) && n >= 0) return n;
+  }
+  if (process.env.VERCEL === "1") return 0;
+  return 10_000;
+}
+
 async function getClient() {
   // 1. Credenciales como JSON string (Vercel y otros PaaS sin filesystem)
   const saJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
@@ -319,7 +330,8 @@ async function getClient() {
 
 async function fetchMonthlyTotals() {
   const now = Date.now();
-  if (cache.data && now - cache.at < cache.ttlMs) {
+  const ttlMs = getSheetsCacheTtlMs();
+  if (cache.data && ttlMs > 0 && now - cache.at < ttlMs) {
     return { ...cache.data, cached: true };
   }
 
@@ -531,7 +543,7 @@ async function fetchMonthlyTotals() {
     cached: false,
   };
 
-  cache = { at: now, ttlMs: cache.ttlMs, data: payload };
+  cache = { at: now, ttlMs, data: payload };
   return payload;
 }
 

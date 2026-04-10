@@ -386,29 +386,11 @@ export function DashboardShell() {
     loadData(false);
   }, [loadData]);
 
-  // SSE: escucha /api/stream y recarga cuando hay datos nuevos
+  // Polling fiable: SSE + caché en memoria no funcionan bien en Vercel (varias instancias).
+  // Cada tick usa ?fresh=1; el UI solo se actualiza si cambió el fingerprint (sin animar al pedo).
   useEffect(() => {
-    let es: EventSource | null = null;
-
-    const connect = () => {
-      es = new EventSource("/api/stream");
-
-      es.onmessage = (e) => {
-        if (e.data === "update") {
-          loadData(true);
-        }
-        // "connected", "reconnect" y heartbeats los ignoramos
-      };
-
-      es.onerror = () => {
-        // EventSource reconecta automáticamente; cerramos la instancia rota
-        // para que el browser maneje el back-off de reconexión nativo
-        es?.close();
-      };
-    };
-
-    connect();
-    return () => es?.close();
+    const id = setInterval(() => loadData(true), 10_000);
+    return () => clearInterval(id);
   }, [loadData]);
 
   useEffect(() => {
