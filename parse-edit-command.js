@@ -39,7 +39,8 @@ const ALLOWED = [
   "Servicios e impuestos",
   "Hogar y mantenimiento",
   "Ropa y calzado",
-  "Ocio y suscripciones",
+  "Ocio",
+  "Suscripciones",
   "Mascotas",
   "Educación",
   "Regalos y donaciones",
@@ -54,6 +55,10 @@ function norm(s) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+const LEGACY = {
+  "ocio y suscripciones": "Suscripciones",
+};
+
 function normalizeCategory(raw) {
   const t = String(raw || "").trim();
   if (!t) return "Otros";
@@ -61,6 +66,7 @@ function normalizeCategory(raw) {
     if (a === t) return a;
   }
   const n = norm(t);
+  if (LEGACY[n]) return LEGACY[n];
   for (const a of ALLOWED) {
     if (norm(a) === n) return a;
   }
@@ -72,7 +78,8 @@ function normalizeCategory(raw) {
     [/farmacia|medicina|m[eé]dico|laboratorio|salud\b/i, "Salud"],
     [/luz\b|gas\b|internet|expensas|abl|monotributo|impuesto|servicios publicos/i, "Servicios e impuestos"],
     [/mascota|perro|gato|veterinaria|balanceado/i, "Mascotas"],
-    [/netflix|streaming|cine|spotify|ocio|suscripcion/i, "Ocio y suscripciones"],
+    [/hoyts|cinemark|\bcine\b|pel[ií]cula|entrada|teatro|recital/i, "Ocio"],
+    [/netflix|streaming|spotify|suscripcion|vpn/i, "Suscripciones"],
     [/ropa|zapatilla|calzado/i, "Ropa y calzado"],
     [/curso|libro|universidad|colegio|educacion/i, "Educación"],
     [/regalo|donacion/i, "Regalos y donaciones"],

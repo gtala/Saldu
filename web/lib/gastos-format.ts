@@ -69,6 +69,7 @@ const DICT: Record<string, string> = {
   "Hogar y mantenimiento": "Hogar",
   "Ropa y calzado": "Ropa",
   "Regalos y donaciones": "Regalos",
+  Ocio: "Ocio",
   Suscripciones: "Suscrip.",
   Educación: "Educ.",
 };
@@ -82,6 +83,7 @@ const MICRO: Record<string, string> = {
   "Hogar y mantenimiento": "Hog",
   "Ropa y calzado": "Ropa",
   "Regalos y donaciones": "Reg",
+  Ocio: "Ocio",
   Suscripciones: "Sus",
   Deportes: "Dep",
   Educación: "Edu",
