@@ -162,6 +162,52 @@ function sortByMonthTitle(a, b) {
   return pa.month - pb.month;
 }
 
+/** @param {number} month0 mes 0–11 */
+function daysInCalendarMonth(year, month0) {
+  return new Date(year, month0 + 1, 0).getDate();
+}
+
+/**
+ * Devuelve el día 1..31 si la celda de fecha cae en el mes de la pestaña.
+ * @param {unknown} cell
+ * @param {number} sheetYear
+ * @param {number} sheetMonth0 0–11
+ * @returns {number | null}
+ */
+function dayOfMonthInSheet(cell, sheetYear, sheetMonth0) {
+  if (cell == null || cell === "") return null;
+  if (typeof cell === "number" && cell > 20000 && cell < 80000) {
+    const ms = (cell - 25569) * 86400 * 1000;
+    const d = new Date(ms);
+    if (
+      d.getUTCFullYear() === sheetYear &&
+      d.getUTCMonth() === sheetMonth0
+    ) {
+      return d.getUTCDate();
+    }
+    return null;
+  }
+  const s = String(cell).trim();
+  let y;
+  let m0;
+  let day;
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) {
+    y = parseInt(iso[1], 10);
+    m0 = parseInt(iso[2], 10) - 1;
+    day = parseInt(iso[3], 10);
+  } else {
+    const dm = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (!dm) return null;
+    day = parseInt(dm[1], 10);
+    m0 = parseInt(dm[2], 10) - 1;
+    y = parseInt(dm[3], 10);
+  }
+  if (y !== sheetYear || m0 !== sheetMonth0) return null;
+  if (!Number.isFinite(day) || day < 1 || day > 31) return null;
+  return day;
+}
+
 /** Pestañas que no son "mes año" de movimientos. */
 function isFixedSheetTitle(title) {
   const t = String(title || "")
@@ -442,6 +488,17 @@ async function fetchMonthlyTotals() {
     /** @type {Record<string, { total: number; rowCount: number }>} */
     const byIncomeCat = {};
 
+    const sheetMeta = parseSheetTitle(title);
+    const daysInMonth =
+      sheetMeta.month !== 99
+        ? daysInCalendarMonth(sheetMeta.year, sheetMeta.month)
+        : 0;
+    /** @type {Array<{ day: number; totalArs: number; count: number }>} */
+    const dailyGastos = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      dailyGastos.push({ day: d, totalArs: 0, count: 0 });
+    }
+
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       if (!row || row.every((c) => c === "" || c == null)) continue;
@@ -468,6 +525,18 @@ async function fetchMonthlyTotals() {
       }
 
       total += amt;
+
+      if (fechaIdx >= 0 && daysInMonth > 0) {
+        const dom = dayOfMonthInSheet(
+          row[fechaIdx],
+          sheetMeta.year,
+          sheetMeta.month
+        );
+        if (dom != null && dom >= 1 && dom <= daysInMonth) {
+          dailyGastos[dom - 1].totalArs += amt;
+          dailyGastos[dom - 1].count += 1;
+        }
+      }
 
       let label = "Sin categoría";
       if (catIdx >= 0 && row[catIdx] != null && String(row[catIdx]).trim() !== "") {
@@ -515,6 +584,12 @@ async function fetchMonthlyTotals() {
         .slice(0, 120);
     }
 
+    for (const p of dailyGastos) {
+      p.totalArs = Math.round(p.totalArs * 100) / 100;
+    }
+    const avgDailyGastoArs =
+      daysInMonth > 0 ? Math.round((total / daysInMonth) * 100) / 100 : 0;
+
     months.push({
       name: title,
       total: Math.round(total * 100) / 100,
@@ -524,6 +599,9 @@ async function fetchMonthlyTotals() {
       categories,
       categoryDetails,
       hasCategoryColumn: catIdx >= 0,
+      daysInMonth,
+      dailyGastos,
+      avgDailyGastoArs,
       error: null,
     });
   }

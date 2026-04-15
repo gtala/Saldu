@@ -11,6 +11,7 @@ import {
 } from "@/lib/gastos-format";
 import type { DashboardPayload, MonthPayload } from "@/lib/gastos-types";
 import { PatrimonioPanel } from "@/components/patrimonio-panel";
+import { ExpensesDailyLineChart } from "@/components/expenses-daily-line-chart";
 import { LiveToastContainer, pushToast } from "@/components/live-toast";
 import { useCountUp } from "@/lib/use-count-up";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -634,6 +635,13 @@ export function DashboardShell() {
           <>
             <MonthBalanceCard month={month} currency={currency} venta={venta} />
             <MonthTotalCard month={month} currency={currency} venta={venta} />
+            {!month.error && (month.dailyGastos?.length ?? 0) > 0 ? (
+              <ExpensesDailyLineChart
+                month={month}
+                currency={currency}
+                venta={venta}
+              />
+            ) : null}
             <ExpensesTreemap
               month={month}
               currency={currency}

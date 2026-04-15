@@ -12,6 +12,13 @@ export type CategoryMovement = {
   moneda: string;
 };
 
+/** Un punto por día del mes: gasto acumulado ese día (ARS) y cantidad de movimientos. */
+export type DailyGastoPoint = {
+  day: number;
+  totalArs: number;
+  count: number;
+};
+
 export type MonthPayload = {
   name: string;
   total: number;
@@ -22,6 +29,12 @@ export type MonthPayload = {
   categoryDetails?: Record<string, CategoryMovement[]>;
   hasCategoryColumn?: boolean;
   incomeCategories?: MonthCategory[];
+  /** Días del mes calendario (28–31) */
+  daysInMonth?: number;
+  /** Serie diaria de gastos (solo filas con fecha válida en ese mes) */
+  dailyGastos?: DailyGastoPoint[];
+  /** total / daysInMonth — referencia para “promedio por día” */
+  avgDailyGastoArs?: number;
   error?: string | null;
 };
 
