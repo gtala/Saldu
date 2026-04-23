@@ -20,6 +20,28 @@ type Props = {
   venta: number | null;
 };
 
+/** Ventana de media móvil en días (máx. 7; en meses cortos baja). */
+function rollingWindowSize(daysInMonth: number) {
+  if (daysInMonth <= 2) return 2;
+  if (daysInMonth < 7) return Math.max(2, daysInMonth);
+  return 7;
+}
+
+function addRollingTrend(
+  points: Array<{ day: number; montoDisplay: number; count: number }>,
+  windowSize: number
+) {
+  return points.map((p, i) => {
+    const from = Math.max(0, i - windowSize + 1);
+    const slice = points.slice(from, i + 1);
+    const sum = slice.reduce((a, q) => a + q.montoDisplay, 0);
+    return {
+      ...p,
+      tendenciaDisplay: sum / slice.length,
+    };
+  });
+}
+
 export function ExpensesDailyLineChart({ month, currency, venta }: Props) {
   const series = month.dailyGastos ?? [];
   const avgArs = month.avgDailyGastoArs ?? 0;
@@ -32,11 +54,13 @@ export function ExpensesDailyLineChart({ month, currency, venta }: Props) {
     return ars;
   };
 
-  const data = series.map((p) => ({
+  const base = series.map((p) => ({
     day: p.day,
     montoDisplay: toDisplayArs(p.totalArs),
     count: p.count,
   }));
+  const win = rollingWindowSize(dim);
+  const data = addRollingTrend(base, win);
 
   const avgDisplay = toDisplayArs(avgArs);
 
@@ -50,14 +74,16 @@ export function ExpensesDailyLineChart({ month, currency, venta }: Props) {
   return (
     <section
       className="border-border bg-card text-card-foreground rounded-xl border p-4 shadow-sm"
-      aria-label="Gastos por día del mes"
+      aria-label="Gasto diario del mes y tendencia"
     >
       <h3 className="text-foreground mb-1 text-sm font-semibold tracking-tight">
-        Gastos por día
+        Gasto diario del mes
       </h3>
       <p className="text-muted-foreground mb-4 text-xs">
-        Línea principal: total gastado ese día. Línea fina: cantidad de movimientos.
-        Línea punteada: promedio de gasto por día (total del mes ÷ {dim} días).
+        Picos: gasto real cada día. Tendencia: media móvil de {win} días (suaviza
+        para ver si vas arriba o abajo del ritmo). Línea punteada: promedio fijo
+        del mes (total ÷ {dim} días) para estimar “cuánto por día” en promedio.
+        Eje derecho: cantidad de movimientos.
       </p>
       <div className="text-muted-foreground mb-2 text-xs">
         Promedio:{" "}
@@ -112,17 +138,26 @@ export function ExpensesDailyLineChart({ month, currency, venta }: Props) {
                 if (!active || !payload?.length) return null;
                 const row = payload[0].payload as {
                   montoDisplay: number;
+                  tendenciaDisplay: number;
                   count: number;
                 };
                 const ars =
                   currency === "USD" && venta != null && venta > 0
                     ? row.montoDisplay * venta
                     : row.montoDisplay;
+                const arsT =
+                  currency === "USD" && venta != null && venta > 0
+                    ? row.tendenciaDisplay * venta
+                    : row.tendenciaDisplay;
                 return (
                   <div className="border-border bg-popover text-popover-foreground rounded-md border px-2 py-1.5 text-xs shadow-md">
                     <div className="font-medium">Día {label}</div>
                     <div className="tabular-nums">
-                      {formatMoneyArs(ars, currency, venta)}
+                      Gasto: {formatMoneyArs(ars, currency, venta)}
+                    </div>
+                    <div className="text-muted-foreground tabular-nums">
+                      Tendencia ({win}d):{" "}
+                      {formatMoneyArs(arsT, currency, venta)}
                     </div>
                     <div className="text-muted-foreground mt-0.5">
                       {row.count} movimiento{row.count === 1 ? "" : "s"}
@@ -159,6 +194,15 @@ export function ExpensesDailyLineChart({ month, currency, venta }: Props) {
               strokeWidth={2}
               dot={{ r: 2, fill: "hsl(var(--primary))" }}
               activeDot={{ r: 4 }}
+            />
+            <Line
+              yAxisId="money"
+              type="monotone"
+              dataKey="tendenciaDisplay"
+              name={`Tendencia (${win}d)`}
+              stroke="var(--chart-2)"
+              strokeWidth={1.75}
+              dot={false}
             />
             <Line
               yAxisId="count"
