@@ -551,10 +551,14 @@ export function DashboardShell() {
   return (
     <>
     <Tabs value={tab} onValueChange={setTab} className="gap-4">
-      <TabsList className="w-full max-w-md" variant="line">
+      <TabsList
+        className="flex h-auto min-h-10 w-full max-w-2xl flex-wrap gap-1"
+        variant="line"
+      >
         <TabsTrigger value="patrimonio">Patrimonio</TabsTrigger>
         <TabsTrigger value="ingresos">Ingresos</TabsTrigger>
         <TabsTrigger value="gastos">Gastos</TabsTrigger>
+        <TabsTrigger value="diario">Diario</TabsTrigger>
       </TabsList>
 
       {showToolbar && (
@@ -635,13 +639,6 @@ export function DashboardShell() {
           <>
             <MonthBalanceCard month={month} currency={currency} venta={venta} />
             <MonthTotalCard month={month} currency={currency} venta={venta} />
-            {!month.error && (month.dailyGastos?.length ?? 0) > 0 ? (
-              <ExpensesDailyLineChart
-                month={month}
-                currency={currency}
-                venta={venta}
-              />
-            ) : null}
             <ExpensesTreemap
               month={month}
               currency={currency}
@@ -658,6 +655,29 @@ export function DashboardShell() {
                 onClose={() => setSelectedCategory("")}
               />
             ) : null}
+          </>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            No hay pestañas mensuales en el spreadsheet.
+          </p>
+        )}
+      </TabsContent>
+
+      <TabsContent value="diario" className="mt-2 flex flex-col gap-3">
+        {month ? (
+          <>
+            {!month.error && (month.dailyGastos?.length ?? 0) > 0 ? (
+              <ExpensesDailyLineChart
+                month={month}
+                currency={currency}
+                venta={venta}
+              />
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                No hay serie diaria para este mes (fechas vacías o pestaña sin
+                datos).
+              </p>
+            )}
           </>
         ) : (
           <p className="text-muted-foreground text-sm">

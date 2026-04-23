@@ -582,3 +582,15 @@
     transform: translateX(0) scale(1);
   }
 }
+
+/* Recharts (gasto diario): ticks/leyenda usan fill en SVG; vars son oklch — no hsl(var()) */
+.chart-daily-gastos .recharts-cartesian-axis-tick text {
+  fill: var(--muted-foreground);
+}
+.chart-daily-gastos .recharts-legend-item-text {
+  fill: var(--foreground) !important;
+  color: var(--foreground);
+}
+.chart-daily-gastos .recharts-label {
+  fill: var(--muted-foreground);
+}

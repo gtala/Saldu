@@ -92,46 +92,50 @@ export function ExpensesDailyLineChart({ month, currency, venta }: Props) {
         </span>{" "}
         / día
       </div>
-      <div className="h-[260px] w-full min-w-0">
+      <div
+        className="chart-daily-gastos h-[280px] w-full min-w-0 text-foreground"
+        style={{ color: "var(--foreground)" }}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={data}
-            margin={{ top: 8, right: 4, left: 0, bottom: 0 }}
+            margin={{ top: 12, right: 8, left: 4, bottom: 8 }}
           >
             <CartesianGrid
-              stroke="hsl(var(--border))"
+              stroke="var(--border)"
+              strokeOpacity={0.6}
               strokeDasharray="3 3"
               vertical={false}
             />
             <XAxis
               dataKey="day"
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-              tickLine={false}
-              axisLine={{ stroke: "hsl(var(--border))" }}
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              tickLine={{ stroke: "var(--border)" }}
+              axisLine={{ stroke: "var(--border)" }}
               label={{
                 value: "Día del mes",
                 position: "insideBottom",
-                offset: -2,
-                fontSize: 10,
-                fill: "hsl(var(--muted-foreground))",
+                offset: -4,
+                fontSize: 11,
+                fill: "var(--muted-foreground)",
               }}
             />
             <YAxis
               yAxisId="money"
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-              tickLine={false}
-              axisLine={{ stroke: "hsl(var(--border))" }}
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              tickLine={{ stroke: "var(--border)" }}
+              axisLine={{ stroke: "var(--border)" }}
               tickFormatter={tickMoney}
-              width={56}
+              width={64}
             />
             <YAxis
               yAxisId="count"
               orientation="right"
               allowDecimals={false}
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-              tickLine={false}
-              axisLine={{ stroke: "hsl(var(--border))" }}
-              width={36}
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              tickLine={{ stroke: "var(--border)" }}
+              axisLine={{ stroke: "var(--border)" }}
+              width={40}
             />
             <Tooltip
               content={({ active, payload, label }) => {
@@ -167,22 +171,26 @@ export function ExpensesDailyLineChart({ month, currency, venta }: Props) {
               }}
             />
             <Legend
-              wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+              wrapperStyle={{
+                fontSize: 12,
+                paddingTop: 10,
+                color: "var(--foreground)",
+              }}
               formatter={(value) => (
-                <span className="text-muted-foreground">{value}</span>
+                <span style={{ color: "var(--foreground)" }}>{value}</span>
               )}
             />
             <ReferenceLine
               yAxisId="money"
               y={avgDisplay}
-              stroke="hsl(var(--muted-foreground))"
+              stroke="var(--muted-foreground)"
               strokeDasharray="5 5"
               strokeWidth={1.5}
               label={{
                 value: "Promedio $/día",
                 position: "right",
-                fill: "hsl(var(--muted-foreground))",
-                fontSize: 10,
+                fill: "var(--foreground)",
+                fontSize: 11,
               }}
             />
             <Line
@@ -190,18 +198,18 @@ export function ExpensesDailyLineChart({ month, currency, venta }: Props) {
               type="monotone"
               dataKey="montoDisplay"
               name="Gasto del día"
-              stroke="hsl(var(--primary))"
+              stroke="var(--primary)"
               strokeWidth={2}
-              dot={{ r: 2, fill: "hsl(var(--primary))" }}
-              activeDot={{ r: 4 }}
+              dot={{ r: 3, fill: "var(--primary)", stroke: "var(--card)" }}
+              activeDot={{ r: 5, fill: "var(--primary)" }}
             />
             <Line
               yAxisId="money"
               type="monotone"
               dataKey="tendenciaDisplay"
               name={`Tendencia (${win}d)`}
-              stroke="var(--chart-2)"
-              strokeWidth={1.75}
+              stroke="var(--chart-1)"
+              strokeWidth={2}
               dot={false}
             />
             <Line
@@ -209,10 +217,15 @@ export function ExpensesDailyLineChart({ month, currency, venta }: Props) {
               type="monotone"
               dataKey="count"
               name="Cantidad"
-              stroke="hsl(var(--muted-foreground))"
-              strokeWidth={1.5}
-              dot={{ r: 1.5 }}
-              activeDot={{ r: 3 }}
+              stroke="var(--muted-foreground)"
+              strokeWidth={2}
+              dot={{
+                r: 3,
+                fill: "var(--foreground)",
+                stroke: "var(--card)",
+                strokeWidth: 1,
+              }}
+              activeDot={{ r: 5 }}
             />
           </ComposedChart>
         </ResponsiveContainer>
