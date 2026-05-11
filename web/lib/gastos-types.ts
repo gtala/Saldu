@@ -62,6 +62,8 @@ export type PatrimonioData = {
 
 export type DashboardPayload = {
   months: MonthPayload[];
+  /** Presente cuando el origen es Sheets (id del documento leído). */
+  spreadsheetId?: string;
   spreadsheetTitle?: string;
   updatedAt?: string;
   cached?: boolean;

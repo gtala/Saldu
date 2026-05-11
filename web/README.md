@@ -12,6 +12,8 @@ npm run dev
 
 Abre [http://127.0.0.1:3000](http://127.0.0.1:3000).
 
+**Login Google (NextAuth):** `AUTH_URL` tiene que ser exactamente la base donde corre Next (host + puerto). Si el 3000 está ocupado, Next puede usar 3009: entonces `AUTH_URL=http://localhost:3009` y en Google Cloud Console agregá `http://localhost:3009/api/auth/callback/google` en «URI de redireccionamiento autorizados». Si Google vuelve al 3000 y ahí no está Saldu, verás `ruta no encontrada` en el callback.
+
 ## Componentes shadcn
 
 ```bash

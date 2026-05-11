@@ -7,11 +7,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   displayAmountFromArs,
   formatMoneyArs,
-  pickDefaultMonth,
+  pickLatestMonthTab,
 } from "@/lib/gastos-format";
 import type { DashboardPayload, MonthPayload } from "@/lib/gastos-types";
 import { PatrimonioPanel } from "@/components/patrimonio-panel";
 import { ExpensesDailyLineChart } from "@/components/expenses-daily-line-chart";
+import { MonthResumenPanel } from "@/components/month-resumen-panel";
+import { SpendingPaceGauge } from "@/components/spending-pace-gauge";
+import { FixedBillsPanel } from "@/components/fixed-bills-panel";
+import { computeSpendingPaceIndex } from "@/lib/spending-pace-index";
+import { buildFixedBillsSnapshot } from "@/lib/fixed-bills-status";
 import { LiveToastContainer, pushToast } from "@/components/live-toast";
 import { useCountUp } from "@/lib/use-count-up";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -299,7 +304,11 @@ function IngresosPanel({
   );
 }
 
-export function DashboardShell() {
+export function DashboardShell({
+  authMode = "legacy",
+}: {
+  authMode?: "multi" | "legacy";
+}) {
   const [tab, setTab] = useState("gastos");
   const [payload, setPayload] = useState<DashboardPayload | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
@@ -369,11 +378,7 @@ export function DashboardShell() {
       if (hasNewData || !isPolling) setPayload(j);
       const months = j.months ?? [];
       if (months.length) {
-        const def = pickDefaultMonth(months);
-        setMonthName((prev) => {
-          if (prev && months.some((m) => m.name === prev)) return prev;
-          return def;
-        });
+        setMonthName(pickLatestMonthTab(months));
       }
     } catch (e) {
       if (!isPolling) {
@@ -383,10 +388,46 @@ export function DashboardShell() {
     }
   }, []);
 
-  // initial load
+  // Carga inicial: en modo multi primero aprovisionamos planilla (SA + Redis).
   useEffect(() => {
-    loadData(false);
-  }, [loadData]);
+    let cancelled = false;
+    async function init() {
+      if (authMode === "multi") {
+        try {
+          const r = await fetch("/api/account/ensure-sheet", {
+            method: "POST",
+            credentials: "same-origin",
+          });
+          const j = (await r.json()) as {
+            error?: string;
+            code?: string;
+            hint?: string;
+          };
+          if (!r.ok) {
+            if (!cancelled) {
+              setLoadErr(
+                [j.error, j.hint].filter(Boolean).join("\n\n") ||
+                  `Error ${r.status}`
+              );
+              setPayload(null);
+            }
+            return;
+          }
+        } catch (e) {
+          if (!cancelled) {
+            setLoadErr(e instanceof Error ? e.message : "Error");
+            setPayload(null);
+          }
+          return;
+        }
+      }
+      if (!cancelled) await loadData(false);
+    }
+    void init();
+    return () => {
+      cancelled = true;
+    };
+  }, [authMode, loadData]);
 
   // Con Upstash (live): n8n → POST /api/notify → incr en Redis; acá solo leemos /api/version (liviano).
   // Sin Redis: respaldo cada 60s a /api/data (edits manuales en Sheets sin n8n).
@@ -495,6 +536,23 @@ export function DashboardShell() {
     [payload, monthName]
   );
 
+  const prevMonth = useMemo(() => {
+    const list = payload?.months ?? [];
+    const idx = list.findIndex((m) => m.name === monthName);
+    if (idx <= 0) return null;
+    return list[idx - 1] ?? null;
+  }, [payload, monthName]);
+
+  const spendingPace = useMemo(() => {
+    if (!month) return null;
+    return computeSpendingPaceIndex(month, payload?.months ?? []);
+  }, [month, payload?.months]);
+
+  const fixedBillsSnapshot = useMemo(() => {
+    if (!month) return null;
+    return buildFixedBillsSnapshot(month, prevMonth);
+  }, [month, prevMonth]);
+
   useEffect(() => {
     setSelectedCategory("");
   }, [monthName]);
@@ -534,7 +592,7 @@ export function DashboardShell() {
     return (
       <div className="border-destructive/50 bg-destructive/10 text-destructive rounded-xl border p-4 text-sm">
         <p className="font-medium">No se pudieron cargar los datos</p>
-        <p className="mt-1">{loadErr}</p>
+        <p className="mt-1 whitespace-pre-line">{loadErr}</p>
       </div>
     );
   }
@@ -559,6 +617,7 @@ export function DashboardShell() {
         <TabsTrigger value="ingresos">Ingresos</TabsTrigger>
         <TabsTrigger value="gastos">Gastos</TabsTrigger>
         <TabsTrigger value="diario">Diario</TabsTrigger>
+        <TabsTrigger value="resumen">Resumen</TabsTrigger>
       </TabsList>
 
       {showToolbar && (
@@ -639,6 +698,20 @@ export function DashboardShell() {
           <>
             <MonthBalanceCard month={month} currency={currency} venta={venta} />
             <MonthTotalCard month={month} currency={currency} venta={venta} />
+            {fixedBillsSnapshot ? (
+              <FixedBillsPanel
+                snapshot={fixedBillsSnapshot}
+                currency={currency}
+                venta={venta}
+              />
+            ) : null}
+            {spendingPace ? (
+              <SpendingPaceGauge
+                result={spendingPace}
+                currency={currency}
+                venta={venta}
+              />
+            ) : null}
             <ExpensesTreemap
               month={month}
               currency={currency}
@@ -679,6 +752,21 @@ export function DashboardShell() {
               </p>
             )}
           </>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            No hay pestañas mensuales en el spreadsheet.
+          </p>
+        )}
+      </TabsContent>
+
+      <TabsContent value="resumen" className="mt-2 flex flex-col gap-3">
+        {month ? (
+          <MonthResumenPanel
+            month={month}
+            prevMonth={prevMonth}
+            currency={currency}
+            venta={venta}
+          />
         ) : (
           <p className="text-muted-foreground text-sm">
             No hay pestañas mensuales en el spreadsheet.

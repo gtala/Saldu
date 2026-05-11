@@ -60,6 +60,17 @@ export function pickDefaultMonth(months: MonthPayload[]) {
   return "";
 }
 
+/** Última pestaña “mes año” en orden cronológico (p. ej. mayo 2026 tras abril 2026). */
+export function pickLatestMonthTab(months: MonthPayload[]) {
+  for (let i = months.length - 1; i >= 0; i--) {
+    const m = months[i];
+    if (m.error) continue;
+    return m.name;
+  }
+  if (months.length) return months[months.length - 1].name;
+  return "";
+}
+
 const DICT: Record<string, string> = {
   Automóvil: "Auto",
   Vivienda: "Viv.",

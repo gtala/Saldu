@@ -60,16 +60,18 @@ function normalizeMonedaCell(cell) {
   return "ARS";
 }
 
-function getSpreadsheetId() {
-  const id = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
-  if (!id || !String(id).trim()) {
+function getSpreadsheetId(override) {
+  const fromEnv = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+  const o = override != null ? String(override).trim() : "";
+  if (o) return o;
+  if (!fromEnv || !String(fromEnv).trim()) {
     const err = new Error(
       "Falta GOOGLE_SHEETS_SPREADSHEET_ID (ID del documento de Google Sheets)."
     );
     err.code = "NO_SPREADSHEET_ID";
     throw err;
   }
-  return String(id).trim();
+  return String(fromEnv).trim();
 }
 
 const MONTH_ORDER = {
@@ -319,7 +321,18 @@ async function fetchPatrimonioSnapshots(sheets, spreadsheetId) {
   }
 }
 
-let cache = { at: 0, ttlMs: 10_000, data: null };
+/** Caché por spreadsheetId (multi-usuario / varias planillas). */
+const cacheBySpreadsheetId = new Map();
+
+function getCacheEntry(spreadsheetId) {
+  const id = String(spreadsheetId || "").trim() || "_default";
+  let e = cacheBySpreadsheetId.get(id);
+  if (!e) {
+    e = { at: 0, ttlMs: 10_000, data: null };
+    cacheBySpreadsheetId.set(id, e);
+  }
+  return e;
+}
 
 /** En Vercel (varias instancias) el caché en memoria da datos viejos; TTL 0 = siempre Sheets. */
 function getSheetsCacheTtlMs() {
@@ -374,9 +387,16 @@ async function getClient() {
   return null;
 }
 
-async function fetchMonthlyTotals() {
+/**
+ * @param {{ spreadsheetId?: string }} [opts]
+ * Si `spreadsheetId` viene vacío, se usa `GOOGLE_SHEETS_SPREADSHEET_ID`.
+ */
+async function fetchMonthlyTotals(opts) {
+  const opt = opts && typeof opts === "object" ? opts : {};
+  const spreadsheetId = getSpreadsheetId(opt.spreadsheetId);
   const now = Date.now();
   const ttlMs = getSheetsCacheTtlMs();
+  const cache = getCacheEntry(spreadsheetId);
   if (cache.data && ttlMs > 0 && now - cache.at < ttlMs) {
     return { ...cache.data, cached: true };
   }
@@ -389,8 +409,6 @@ async function fetchMonthlyTotals() {
   }
 
   const usdVentaArs = await fetchDolarCriptoVenta();
-
-  const spreadsheetId = getSpreadsheetId();
 
   const { data: meta } = await sheets.spreadsheets.get({
     spreadsheetId,
@@ -621,12 +639,29 @@ async function fetchMonthlyTotals() {
     cached: false,
   };
 
-  cache = { at: now, ttlMs, data: payload };
+  cache.at = now;
+  cache.ttlMs = ttlMs;
+  cache.data = payload;
   return payload;
 }
 
-function clearCache() {
-  cache.at = 0;
+/** @param {string} [spreadsheetId] Si se omite, invalida todas las entradas. */
+function clearCache(spreadsheetId) {
+  const id = spreadsheetId != null ? String(spreadsheetId).trim() : "";
+  if (id) {
+    const e = cacheBySpreadsheetId.get(id);
+    if (e) e.at = 0;
+    return;
+  }
+  for (const e of cacheBySpreadsheetId.values()) {
+    e.at = 0;
+  }
 }
 
-module.exports = { fetchMonthlyTotals, getClient, fetchPatrimonioSnapshots, clearCache };
+module.exports = {
+  fetchMonthlyTotals,
+  getClient,
+  fetchPatrimonioSnapshots,
+  clearCache,
+  getSpreadsheetId,
+};
